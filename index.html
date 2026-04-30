@@ -4,20 +4,37 @@
   <meta charset="UTF-8" />
   <title>Sistema de Pontos</title>
   <style>
-    body{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;padding:32px;color:#222}
-    .container{max-width:1000px;margin:auto;background:#fff;padding:28px;border-radius:14px;box-shadow:0 0 14px rgba(0,0,0,.12)}
-    h1{text-align:center} h2{margin-top:32px;border-top:1px solid #ddd;padding-top:22px}
-    label{font-weight:bold;display:block;margin-top:10px} input,select,textarea{width:100%;padding:10px;margin:7px 0 12px;box-sizing:border-box;font-size:15px}
+    :root{
+      --bg:#f4f6f8;--card:#fff;--text:#222;--muted:#555;--line:#ddd;
+      --box:#eef2f5;--alert:#fff3cd;--manual:#fff8e1;--shadow:rgba(0,0,0,.12);
+      --primary:#007bff;--primary-hover:#0056b3;--success:#198754;--danger:#dc3545;--warning:#ff9800;
+    }
+    body.dark{
+      --bg:#111827;--card:#1f2937;--text:#f9fafb;--muted:#d1d5db;--line:#374151;
+      --box:#263244;--alert:#3b3420;--manual:#3d3218;--shadow:rgba(0,0,0,.45);
+      --primary:#3b82f6;--primary-hover:#2563eb;--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;
+    }
+    body{font-family:Arial,sans-serif;background:var(--bg);margin:0;padding:32px;color:var(--text);transition:.2s}
+    .container{max-width:1000px;margin:auto;background:var(--card);padding:28px;border-radius:14px;box-shadow:0 0 14px var(--shadow)}
+    .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .theme-toggle{background:var(--success)}
+    h1{text-align:center;margin:0 0 22px} h2{margin-top:32px;border-top:1px solid var(--line);padding-top:22px}
+    label{font-weight:bold;display:block;margin-top:10px} input,select,textarea{width:100%;padding:10px;margin:7px 0 12px;box-sizing:border-box;font-size:15px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text)}
     textarea{min-height:80px}.botoes{display:flex;gap:10px;flex-wrap:wrap}.botoes button{flex:1;min-width:150px}
-    button{background:#007bff;color:#fff;border:0;border-radius:8px;padding:12px 16px;cursor:pointer;font-size:15px;margin:4px 0}button:hover{background:#0056b3}button:disabled{background:#aaa}
-    .danger{background:#dc3545}.okbtn{background:#198754}.warn{background:#ff9800;color:#111}
-    .box{background:#eef2f5;border-left:5px solid #007bff;padding:12px;border-radius:8px;margin:10px 0}.manual{background:#fff8e1;border-left-color:#ff9800}
-    .alerta{background:#fff3cd;border-left:5px solid #ffc107;padding:12px;border-radius:8px;margin:12px 0}.ok{color:green;font-weight:bold}.erro{color:red;font-weight:bold}.admin-only{display:none}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.card{background:#f8f9fa;border-left:5px solid #198754;border-radius:10px;padding:14px}.card strong{font-size:24px;display:block}
+    button{background:var(--primary);color:#fff;border:0;border-radius:8px;padding:12px 16px;cursor:pointer;font-size:15px;margin:4px 0}button:hover{background:var(--primary-hover)}button:disabled{background:#777;cursor:not-allowed}
+    .danger{background:var(--danger)}.okbtn{background:var(--success)}.warn{background:var(--warning);color:#111}
+    .box{background:var(--box);border-left:5px solid var(--primary);padding:12px;border-radius:8px;margin:10px 0}.manual{background:var(--manual);border-left-color:var(--warning)}
+    .alerta{background:var(--alert);border-left:5px solid #ffc107;padding:12px;border-radius:8px;margin:12px 0}.ok{color:var(--success);font-weight:bold}.erro{color:var(--danger);font-weight:bold}.admin-only{display:none}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.card{background:var(--box);border-left:5px solid var(--success);border-radius:10px;padding:14px}.card strong{font-size:24px;display:block;color:var(--text)}
+    a{color:var(--primary)}
   </style>
 </head>
 <body>
 <div class="container">
+  <div class="topbar">
+    <div><strong>Sistema CETEM</strong></div>
+    <button class="theme-toggle" onclick="trocarTema()" id="btn_tema">🌙 Modo escuro</button>
+  </div>
   <h1>Sistema de Pontos</h1>
 
   <label>Colaborador</label>
@@ -88,6 +105,8 @@
 const API_URL='http://127.0.0.1:8000';
 let admin=false, adminPassword='', proximoTipo=null, colaboradores=[], registrosRelatorio=[];
 const nomes={entrada:'Entrada',saida_almoco:'Saída Almoço',retorno_almoco:'Retorno Almoço',saida:'Saída'};
+function aplicarTema(tema){document.body.classList.toggle('dark',tema==='dark');localStorage.setItem('tema_ponto',tema);document.getElementById('btn_tema').innerText=tema==='dark'?'☀️ Modo claro':'🌙 Modo escuro'}
+function trocarTema(){aplicarTema(document.body.classList.contains('dark')?'light':'dark')}
 function status(msg,t='ok'){document.getElementById('status').innerHTML=`<span class="${t==='erro'?'erro':'ok'}">${msg}</span>`}
 function fmtTipo(t){return nomes[t]||t||'-'}
 function fmtData(d){return d?new Date(d).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'-'}
@@ -111,7 +130,7 @@ async function registrarAjuste(){const id=document.getElementById('ajuste_colabo
 async function carregarHistorico(){const r=await fetch(`${API_URL}/registros-ponto`);const d=await r.json();document.getElementById('historico').innerHTML=(d.registros||[]).map(x=>`<div class="box ${x.manual?'manual':''}"><b>${fmtTipo(x.tipo)} ${x.manual?' - AJUSTE MANUAL':''}</b><br>Colaborador: ${nomeColab(x.colaborador_id)}<br>Data/Hora: ${fmtData(x.created_at)}<br>Criado por: ${x.criado_por||'-'}<br>${x.justificativa?`Justificativa: ${x.justificativa}`:''}</div>`).join('')||'<p>Nenhum registro.</p>'}
 async function gerarRelatorio(){const c=document.getElementById('relatorio_colaborador_id').value,ini=document.getElementById('data_inicio').value,fim=document.getElementById('data_fim').value;const r=await fetch(`${API_URL}/relatorio-ponto?colaborador_id=${c}&data_inicio=${ini}&data_fim=${fim}&admin_password=${encodeURIComponent(adminPassword)}`);const d=await r.json();registrosRelatorio=d.registros||[];document.getElementById('relatorio').innerHTML=`<p>Total: ${d.total_registros||0}</p>`+registrosRelatorio.map(x=>`<div class="box ${x.manual?'manual':''}">${nomeColab(x.colaborador_id)} - ${fmtTipo(x.tipo)} - ${fmtData(x.created_at)} - ${x.criado_por||'-'}</div>`).join('')}
 function exportarCSV(){if(!registrosRelatorio.length)return status('Nenhum registro para exportar.','erro');const linhas=[['Colaborador','Tipo','Data/Hora','Manual','Justificativa','Criado por'],...registrosRelatorio.map(x=>[nomeColab(x.colaborador_id),fmtTipo(x.tipo),fmtData(x.created_at),x.manual?'Sim':'Não',x.justificativa||'',x.criado_por||''])];const csv=linhas.map(l=>l.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='relatorio_ponto.csv';a.click();}
-async function iniciar(){const h=hoje();['dashboard_data','data_inicio','data_fim'].forEach(id=>document.getElementById(id).value=h);document.getElementById('ajuste_data_hora').value=h+'T08:00';setAdmin();await carregarColaboradores();await atualizarProximoPonto();await carregarHistorico()}
+async function iniciar(){aplicarTema(localStorage.getItem('tema_ponto')||'light');const h=hoje();['dashboard_data','data_inicio','data_fim'].forEach(id=>document.getElementById(id).value=h);document.getElementById('ajuste_data_hora').value=h+'T08:00';setAdmin();await carregarColaboradores();await atualizarProximoPonto();await carregarHistorico()}
 iniciar();
 </script>
 </body>
