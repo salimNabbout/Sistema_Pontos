@@ -1,0 +1,22 @@
+# ---- Credenciais ----
+# Por padrão o config.php é versionado APENAS com valores de placeholder.
+# Se você preferir não subir o arquivo com a senha real, descomente a linha
+# abaixo e mantenha uma cópia local (config.example.php fica versionado).
+# api/config.php
+
+# ---- Sistema operacional ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Editores ----
+.vscode/
+.idea/
+*.sublime-*
+*~
+*.swp
+
+# ---- Pacotes / temporários ----
+*.zip
+*.log
+node_modules/

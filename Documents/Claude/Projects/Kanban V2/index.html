@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0e14">
+  <title>CETEM · Kanban</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236366f1'/%3E%3Ctext x='50%25' y='52%25' font-family='Arial,sans-serif' font-size='38' font-weight='800' fill='white' text-anchor='middle' dominant-baseline='middle'%3EC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="app-glow"></div>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">C</span>
+      <div class="brand-text">
+        <strong>CETEM</strong>
+        <span>Kanban &amp; Horas</span>
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-view="board">Quadro</button>
+      <button class="tab" data-view="dashboard">Dashboard</button>
+    </nav>
+
+    <div class="actions">
+      <button class="btn ghost" id="btn-colaboradores">Colaboradores</button>
+      <button class="btn ghost" id="btn-horas">Lançar horas</button>
+      <button class="btn primary" id="btn-nova-tarefa">+ Tarefa</button>
+    </div>
+  </header>
+
+  <!-- ===================== QUADRO ===================== -->
+  <main id="view-board" class="view active">
+    <div class="board" id="board"><!-- colunas via JS --></div>
+  </main>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <main id="view-dashboard" class="view">
+    <div class="dash-head">
+      <h1>Dashboard de horas</h1>
+      <div class="period">
+        <label>De <input type="date" id="dash-de"></label>
+        <label>Até <input type="date" id="dash-ate"></label>
+        <button class="btn ghost" id="dash-filtrar">Filtrar</button>
+        <button class="btn ghost" id="dash-limpar">Limpar</button>
+        <button class="btn primary" id="dash-export">Exportar CSV</button>
+      </div>
+    </div>
+
+    <section class="kpis" id="kpis"><!-- via JS --></section>
+
+    <div class="dash-grid">
+      <div class="card-panel">
+        <h2>Horas por colaborador</h2>
+        <canvas id="chart-colab" height="220"></canvas>
+      </div>
+      <div class="card-panel">
+        <h2>Horas por tarefa</h2>
+        <div class="table-wrap"><table id="tab-tarefas"><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="card-panel">
+      <h2>Cronologia recente</h2>
+      <ul class="timeline" id="timeline"><!-- via JS --></ul>
+    </div>
+  </main>
+
+  <!-- ===================== MODAL: TAREFA ===================== -->
+  <div class="modal-overlay" id="modal-tarefa">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="tarefa-modal-titulo">Nova tarefa</h3>
+        <button class="x" data-close>×</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="mtab active" data-mtab="detalhes">Detalhes</button>
+        <button class="mtab" data-mtab="cronologia" id="mtab-cronologia">Cronologia</button>
+        <button class="mtab" data-mtab="apontamentos" id="mtab-apontamentos">Apontamentos</button>
+      </div>
+
+      <!-- aba detalhes -->
+      <div class="mpane active" data-pane="detalhes">
+        <input type="hidden" id="t-id">
+        <label class="field">Título<input type="text" id="t-titulo" placeholder="Ex.: Revisar lógica de intertravamento"></label>
+        <label class="field">Descrição<textarea id="t-descricao" rows="3"></textarea></label>
+        <div class="row">
+          <label class="field">Coluna<select id="t-coluna"></select></label>
+          <label class="field">Responsável<select id="t-colaborador"></select></label>
+        </div>
+        <div class="row">
+          <label class="field">Prioridade
+            <select id="t-prioridade">
+              <option value="baixa">Baixa</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+            </select>
+          </label>
+          <label class="field">Prazo<input type="date" id="t-prazo"></label>
+        </div>
+        <div class="modal-foot">
+          <button class="btn danger ghost" id="t-excluir" style="display:none">Excluir</button>
+          <span style="flex:1"></span>
+          <button class="btn ghost" data-close>Cancelar</button>
+          <button class="btn primary" id="t-salvar">Salvar</button>
+        </div>
+      </div>
+
+      <!-- aba cronologia -->
+      <div class="mpane" data-pane="cronologia">
+        <ul class="timeline" id="t-historico"></ul>
+      </div>
+
+      <!-- aba apontamentos -->
+      <div class="mpane" data-pane="apontamentos">
+        <div class="apont-list" id="t-apontamentos"></div>
+        <p class="dim" id="t-apont-total"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: HORAS ===================== -->
+  <div class="modal-overlay" id="modal-horas">
+    <div class="modal sm">
+      <div class="modal-head">
+        <h3>Lançar horas</h3>
+        <button class="x" data-close>×</button>
+      </div>
+      <label class="field">Tarefa<select id="h-tarefa"></select></label>
+      <label class="field">Colaborador<select id="h-colaborador"></select></label>
+      <div class="row">
+        <label class="field">Data<input type="date" id="h-data"></label>
+        <label class="field">Horas<input type="number" id="h-horas" step="0.25" min="0" placeholder="2.5"></label>
+      </div>
+      <label class="field">Descrição (opcional)<input type="text" id="h-descricao"></label>
+      <div class="modal-foot">
+        <span style="flex:1"></span>
+        <button class="btn ghost" data-close>Cancelar</button>
+        <button class="btn primary" id="h-salvar">Lançar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: COLABORADORES ===================== -->
+  <div class="modal-overlay" id="modal-colaboradores">
+    <div class="modal sm">
+      <div class="modal-head">
+        <h3>Colaboradores</h3>
+        <button class="x" data-close>×</button>
+      </div>
+      <div class="colab-list" id="colab-list"></div>
+      <div class="colab-add">
+        <input type="text" id="c-nome" placeholder="Nome">
+        <input type="color" id="c-cor" value="#6366f1">
+        <button class="btn primary" id="c-add">Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/dashboard.js"></script>
+</body>
+</html>

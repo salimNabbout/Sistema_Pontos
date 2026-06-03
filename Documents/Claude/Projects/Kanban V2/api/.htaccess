@@ -1,0 +1,16 @@
+# Roteamento da API.
+# Por padrão o frontend chama "api/index.php/recurso" (PATH_INFO),
+# que funciona em qualquer Apache. A regra abaixo apenas habilita
+# o atalho "api/recurso" (sem index.php) — util se voce trocar
+# API_BASE para 'api' em assets/app.js. Requisicoes que ja contem
+# index.php sao ignoradas pela regra para nao quebrar o PATH_INFO.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !index\.php
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+</IfModule>
+
+# Permite PATH_INFO (api/index.php/recurso)
+AcceptPathInfo On
